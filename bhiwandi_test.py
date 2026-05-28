@@ -1,145 +1,222 @@
 import streamlit as st
-import pandas as pd
-from datetime import datetime, timedelta
-import random
+import datetime
 
-# ====================================================================
-# 🔒 BHIWANDI AI OS - SUBSCRIPTION LOCK & LIVE ON-SITE RTSP INTEGRATION
-# ====================================================================
+# Page configuration
+st.set_page_config(page_title="Bhiwandi AI OS: Licensing Hub", layout="wide", initial_sidebar_state="expanded")
 
-st.set_page_config(page_title="Bhiwandi AI OS - Owner Dashboard", layout="wide")
-
-# Custom UI CSS
+# Custom CSS for Industrial High-Tech Look & Locked Screens
 st.markdown("""
-    <style>
-    .main-title { font-size:34px !important; font-weight: bold; color: #1F4E79; text-align: center; margin-bottom: 5px; }
-    .subtitle { text-align: center; color: #555; font-size: 16px; margin-bottom: 25px; }
-    .expired-box { max-width: 600px; margin: 100px auto; padding: 40px; background-color: #FADBD8; border-top: 10px solid #C00000; border-radius: 10px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-    .login-container { max-width: 480px; margin: 60px auto; padding: 30px; background-color: #F8F9FA; border-radius: 10px; border-top: 8px solid #1F4E79; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-    .counter-box { padding: 12px; background-color: #F1F5F9; border-radius: 6px; border: 1px solid #CBD5E1; text-align: center; }
-    .counter-val { font-size: 20px; font-weight: bold; color: #0F172A; margin: 0; }
-    </style>
+<style>
+    .main { background-color: #0b0e14; color: #ffffff; }
+    .cctv-box {
+        border: 2px solid #232733;
+        border-radius: 8px;
+        padding: 10px;
+        background-color: #121620;
+        margin-bottom: 5px;
+        position: relative;
+    }
+    .ai-badge {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        background-color: #00ff66;
+        color: #000000;
+        padding: 2px 8px;
+        font-weight: bold;
+        font-size: 11px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        box-shadow: 0 0 10px #00ff66;
+        z-index: 10;
+    }
+    .camera-title {
+        font-size: 16px;
+        font-weight: bold;
+        color: #ecf0f1;
+        margin-bottom: 8px;
+        text-align: left;
+        padding-left: 5px;
+    }
+    .alert-box {
+        padding: 10px;
+        border-radius: 6px;
+        margin-top: 8px;
+        font-size: 13px;
+        font-weight: 500;
+    }
+    .alert-danger {
+        background-color: rgba(255, 75, 75, 0.15);
+        border: 1px solid #ff4b4b;
+        color: #ff4b4b;
+    }
+    .alert-success {
+        background-color: rgba(0, 255, 102, 0.1);
+        border: 1px solid #00ff66;
+        color: #00ff66;
+    }
+    .lock-screen {
+        text-align: center;
+        padding: 50px;
+        background-color: #1a0f12;
+        border: 3px solid #ff4b4b;
+        border-radius: 12px;
+        margin-top: 50px;
+        box-shadow: 0 0 30px rgba(255, 75, 75, 0.3);
+    }
+</style>
 """, unsafe_allow_html=True)
 
-OWNERS = {"HEAD_OFFICE": "+919324810136", "PARTNER_MUKESH": "+919819041500"}
+# 🌐 CENTRAL CLOUD SUBSCRIPTION ENGINE (State Management)
+if 'current_plan' not in st.session_state:
+    st.session_state['current_plan'] = "1 Week Trial (Active)"
+if 'system_locked' not in st.session_state:
+    st.session_state['system_locked'] = False
 
-# Session States for Authentication and License
-if "password_verified" not in st.session_state: st.session_state.password_verified = False
-if "otp_generated" not in st.session_state: st.session_state.otp_generated = False
-if "fully_authenticated" not in st.session_state: st.session_state.fully_authenticated = False
-
-# 🕒 SUBSCRIPTION VALIDITY STATE ENGINE
-if "sub_plan" not in st.session_state: st.session_state.sub_plan = "1 Month" # Default
-if "is_expired" not in st.session_state: st.session_state.is_expired = False
-
-# ==========================================
-# 🚨 CRITICAL CHECK: IF SUBSCRIPTION IS EXPIRED (AI 100% CLOSE BAND)
-# ==========================================
-if st.session_state.is_expired:
-    st.markdown("""
-        <div class='expired-box'>
-            <h1 style='color:#C00000; font-size: 40px;'>🚨 SOFTWARE ACCESS TERMINATED</h1>
-            <p style='font-size: 18px; color:#78281F; font-weight:bold;'>Bhiwandi AI OS Validity Has Expired.</p>
-            <p style='color:#5D6D7E;'>All core Deep-Learning models, CCTV feeds, and WhatsApp automation grids are 100% hard-locked.</p>
-            <hr style='border-top: 1px solid #E6B0AA;'>
-            <h3 style='color:#1F4E79;'>📞 Please Contact Head Office immediately for Renewal plan update.</h3>
+# Hard Expiry Display Screen
+if st.session_state['system_locked']:
+    st.markdown(f"""
+    <div class='lock-screen'>
+        <h1 style='color: #ff4b4b; font-size: 50px;'>❌ BHIWANDI AI OS: NETWORK LOCKED</h1>
+        <h3 style='color: #ffffff;'>🚨 RECHARGE REQURED / LICENSE EXPIRED</h3>
+        <p style='font-size: 18px; color: #aaa; margin-top: 20px;'>
+            CCTV Vendor or Client subscription validity has ended. Systems disabled locally.
+        </p>
+        <div style='background-color: #ff4b4b; color: black; padding: 15px; font-size: 22px; font-weight: bold; border-radius: 6px; display: inline-block; margin-top: 20px;'>
+            📞 Contact Master Distributor IKRAM JAFRI for Server Recharge Activation
         </div>
+    </div>
     """, unsafe_allow_html=True)
-    st.stop() # Direct lock, terminates the rest of the script from executing
+    st.stop()
 
-# ==========================================
-# 🛑 LAYER 1 & 2: TWO-FACTOR SECURITY SYSTEM
-# ==========================================
-if not st.session_state.fully_authenticated:
-    st.markdown("<div class='login-container'>", unsafe_allow_html=True)
-    st.image("https://img.icons8.com/fluent/96/000000/shield.png", width=70)
-    st.markdown("<h2 style='margin-top:10px; color:#1F4E79;'>Bhiwandi AI OS Security Hub</h2>", unsafe_allow_html=True)
-    st.write("---")
+# 🔑 PASSWORD PROTECTION LAYER
+if 'authenticated' not in st.session_state:
+    st.session_state['authenticated'] = False
 
-    if not st.session_state.password_verified:
-        password_input = st.text_input("🔑 Enter Master Security Password:", type="password")
-        if st.button("Verify Key", use_container_width=True):
-            if password_input == "bhiwandi@2026":
-                st.session_state.password_verified = True
-                st.rerun()
-            else: st.error("❌ INVALID SECURITY KEY.")
-    else:
-        st.success("✔️ Password Clear. Initializing SMS Network...")
-        if not st.session_state.otp_generated:
-            st.session_state.current_otp = str(random.randint(1000, 9999))
-            st.session_state.otp_generated = True
-
-        st.info("📡 [GATEWAY ACTIVE]: Same OTP dispatched to both numbers.")
-        with st.expander("🛠️ Live SMS Network Sniffer"):
-            st.markdown(f"**Dispatched OTP Token:** `{st.session_state.current_otp}`")
-
-        otp_input = st.text_input("💬 Enter 4-Digit Mobile OTP:", max_chars=4)
-        if st.button("Grant Admin Access", use_container_width=True):
-            if otp_input == st.session_state.current_otp:
-                st.session_state.fully_authenticated = True
-                st.rerun()
-            else: st.error("❌ INVALID TOKEN.")
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# ==========================================
-# 🏭 MAIN OS CONTROL ROOM (UNLOCKED)
-# ==========================================
-else:
-    # --- SIDEBAR CONFIGURATION DESK ---
-    st.sidebar.header("🛡️ Owner License & Control Panel")
-    
-    # Subscription Options Manager on Dashboard
-    st.sidebar.subheader("⏳ License Validity Settings")
-    selected_plan = st.sidebar.selectbox("Active Subscription Plan:", ["1 Week", "1 Month", "6 Month", "1 Year"])
-    
-    # Secret Test Trigger to show client how it locks instantly when expired
-    if st.sidebar.button("🚨 Simulate Instant Expiry Lock", help="Client ke samne test karne ke liye"):
-        st.session_state.is_expired = True
-        st.rerun()
-        
-    st.sidebar.write("---")
-    st.sidebar.header("🔌 Live Client CCTV Input Core")
-    cctv_mode = st.sidebar.selectbox("Select Video Feed Type", ["Demo Live Stream (YouTube)", "Real Factory NVR/CCTV Configuration"])
-
-    # 1. LIVE CLIENT ON-SITE RTSP INJECTOR WITH PASSWORD FIX
-    if cctv_mode == "Real Factory NVR/CCTV Configuration":
-        st.sidebar.info("💡 Client ke samne unka IP address aur password yahan daalo:")
-        ip_addr = st.sidebar.text_input("1️⃣ Camera IP & Port:", value="192.168.1.100:554")
-        cam_user = st.sidebar.text_input("2️⃣ Camera Username:", value="admin")
-        cam_pass = st.sidebar.text_input("3️⃣ Camera Password:", type="password", value="Password123")
-        
-        # Backend automatically creates the protected RTSP token string
-        final_rtsp_url = f"rtsp://{cam_user}:{cam_pass}@{ip_addr}/stream1"
-        st.sidebar.code(f"🔗 Protected RTSP Generated:\nrtsp://{cam_user}:****@{ip_addr}/stream1")
-
-    st.sidebar.write("---")
-    if st.sidebar.button("🔒 Lock Console"):
-        st.session_state.password_verified = False
-        st.session_state.otp_generated = False
-        st.session_state.fully_authenticated = False
-        st.rerun()
-
-    # Dashboard Content Layout
-    st.markdown("<div class='main-title'>🏭 BHIWANDI AI OS: CENTRAL CONTROL CENTER</div>", unsafe_allow_html=True)
-    st.markdown(f"<div class='subtitle'>🔒 Active License Node: <span style='color:#10B981; font-weight:bold;'>{selected_plan} Verified</span></div>", unsafe_allow_html=True)
-    st.write("---")
-
-    col1, col2 = st.columns([1.2, 1])
-    with col1:
-        st.subheader("📹 Live Industrial CCTV Network Mesh")
-        if cctv_mode == "Demo Live Stream (YouTube)":
-            st.video("https://www.youtube.com/watch?v=T7dQi-uE6c0")
+if not st.session_state['authenticated']:
+    st.title("🔒 Bhiwandi AI OS Security Hub")
+    password = st.text_input("Enter Master Security Password:", type="password")
+    if st.button("Verify Key"):
+        if password == "bhiwandi@2026":
+            st.session_state['authenticated'] = True
+            st.rerun()
         else:
-            st.warning(f"Connecting directly to client camera grid at network address: {ip_addr}")
-            st.image("https://images.unsplash.com/photo-1557672172-298e090bd0f1?q=80&w=600", caption=f"[LIVE NETWORK CAPTURED] - Running custom YOLOv8 layer over private RTSP Feed.")
+            st.error("Invalid Security Key!")
+    st.stop()
 
-    with col2:
-        st.subheader("📦 Live Object Tracking Layer")
-        c_col1, c_col2 = st.columns(2)
-        with c_col1:
-            st.markdown("""<div class='counter-box'><p style='margin:0; font-weight:bold;'>📦 BOX (Khoka)</p><p class='counter-val'>📥 42 | 📤 110</p></div>""", unsafe_allow_html=True)
-        with c_col2:
-            st.markdown("""<div class='counter-box'><p style='margin:0; font-weight:bold;'>🌾 GONI (Bora)</p><p class='counter-val'>📥 12 | 📤 65</p></div>""", unsafe_allow_html=True)
+# 🎛️ SECRET OWNER CONTROL PANEL (Sidebar)
+with st.sidebar:
+    st.title("🛡️ Admin Licensing Node")
+    st.markdown("### CCTV WITH AI SURVEILLANCE")
+    st.write("---")
+    
+    # 🕵️‍♂️ HIDDEN RECHARGE SELECTION FOR IKRAM
+    st.markdown("### ⚡ Master Recharge Portal")
+    plan_options = [
+        "1 Week Trial (Active)", 
+        "1 Month Commercial", 
+        "3 Month Commercial", 
+        "6 Month Commercial", 
+        "1 Year Enterprise", 
+        "2 Year Long-Term Block"
+    ]
+    
+    # Ikram can select the recharge plan here
+    selected_plan = st.selectbox("Select Active Subscription Plan:", plan_options, index=plan_options.index(st.session_state['current_plan']))
+    
+    if selected_plan != st.session_state['current_plan']:
+        st.session_state['current_plan'] = selected_plan
+        st.success(f"Recharge Updated to: {selected_plan}")
+        time_delay = 1
+    
+    st.metric(label="🟢 Active Server Plan", value=st.session_state['current_plan'])
+    
+    st.write("---")
+    view_mode = st.radio("Select View Mode:", ["📦 Complete Factory Grid (All Cameras)", "🔍 Single Camera Focus Room"])
+    
+    # 🚨 ANTI-THEFT KILL SWITCH FOR VENDORS
+    st.write("---")
+    st.markdown("⚠️ **Vendor/CCTV Company Lock:**")
+    if st.button("🚨 SIMULATE INSTANT SUBSCRIPTION EXPIRY"):
+        st.session_state['system_locked'] = True
+        st.rerun()
+
+# 🏢 MAIN SURVEILLANCE DASHBOARD ELEVATION
+st.markdown("<h1 style='text-align: center; color: #00ff66;'>🏢 BHIWANDI AI OS: INDUSTRIAL INTELLIGENCE CORE</h1>", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align: center; color: #aaa;'>⚡ Real-time Safety, Labor, Machine Mesh | Connected Plan: <b>{st.session_state['current_plan']}</b></p>", unsafe_allow_html=True)
+st.write("---")
+
+# 📊 INDUSTRIAL SIMULATION DATA
+cameras = [
+    {
+        "id": 1, 
+        "name": "📹 Camera 01: Main Production Floor (Line A)", 
+        "video": "https://www.w3schools.com/html/mov_bbb.mp4", 
+        "workers": 8, "machine": "CNC Machine 01 & 02: RUNNING", "gangway": "CLEAR",
+        "alerts": ["🚨 2 Workers detected WITHOUT HELMET!", "🚨 1 Worker detected WITHOUT SAFETY SHOES!"]
+    },
+    {
+        "id": 2, 
+        "name": "📹 Camera 02: Finished Goods Dispatch Yard & Loading Dock", 
+        "video": "https://www.w3schools.com/html/movie.mp4", 
+        "workers": 5, "machine": "Forklift 01: ACTIVE", "gangway": "CLEAR",
+        "alerts": ["🚨 Worker near loading bay detected WITHOUT SAFETY GLOVES!"]
+    },
+    {
+        "id": 3, 
+        "name": "📹 Camera 03: Raw Material Warehouse Corridor", 
+        "video": "https://www.w3schools.com/html/mov_bbb.mp4", 
+        "workers": 3, "machine": "No Heavy Machinery In Area", "gangway": "❌ BLOCKED",
+        "alerts": ["🚨 CRITICAL: Wooden Pallets left in the middle of Walking Corridor/Gangway!"]
+    },
+    {
+        "id": 4, 
+        "name": "📹 Camera 04: Packaging & Box Stacking Area", 
+        "video": "https://www.w3schools.com/html/movie.mp4", 
+        "workers": 12, "machine": "Automatic Taping Conveyor: RUNNING", "gangway": "CLEAR",
+        "alerts": ["✅ Safety Protocol 100% Stable. All workers wearing complete PPE."]
+    },
+]
+
+# 🎚️ VIEW LOGIC
+if view_mode == "📦 Complete Factory Grid (All Cameras)":
+    col1, col2 = st.columns(2)
+    for i, cam in enumerate(cameras):
+        target_col = col1 if i % 2 == 0 else col2
+        with target_col:
+            st.markdown(f"""
+            <div class='cctv-box'>
+                <div class='ai-badge'>🤖 AI LIVE SURVEILLANCE</div>
+                <div class='camera-title'>{cam['name']}</div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.video(cam['video'], autoplay=True, muted=True, loop=True)
             
-        st.write("---")
-        st.success("🟢 Security Perimeter Matrix stable. Running seamlessly under owner encryption shield.")
+            m1, m2, m3 = st.columns(3)
+            m1.metric("👷 Live Workers", f"{cam['workers']} Persons")
+            m2.metric("⚙️ Machine Status", "ACTIVE" if "RUNNING" in cam['machine'] or "ACTIVE" in cam['machine'] else "IDLE")
+            m3.metric("🚶 Gangway Path", cam['gangway'])
+            
+            for alert in cam['alerts']:
+                if "🚨" in alert:
+                    st.markdown(f"<div class='alert-box alert-danger'>{alert}</div>", unsafe_allow_html=True)
+                else:
+                    st.markdown(f"<div class='alert-box alert-success'>{alert}</div>", unsafe_allow_html=True)
+            st.write("---")
+else:
+    st.markdown("### 🔍 Single Camera Focus Room (Maximized Window)")
+    selected_cam_name = st.selectbox("Choose Camera to Maximize:", [cam['name'] for cam in cameras])
+    cam = next(c for c in cameras if c['name'] == selected_cam_name)
+    
+    st.markdown(f"""
+    <div class='cctv-box' style='border: 3px solid #00ff66;'>
+        <div class='ai-badge' style='font-size: 14px; padding: 4px 12px;'>🤖 AI SURVEILLANCE MAX ACTIVE</div>
+        <h2 style='color: #00ff66; text-align: left; padding-left: 10px; margin:0;'>{cam['name']}</h2>
+    </div>
+    """, unsafe_allow_html=True)
+    st.video(cam['video'], autoplay=True, muted=True, loop=True)
+    
+    m1, m2, m3 = st.columns(3)
+    m1.metric(label="👷 Live Workers Frame", value=f"{cam['workers']} Persons")
+    m2.metric(label="⚙️ Machinery Status", value=cam['machine'])
+    m3.metric(label="🚶 Gangway Compliance", value=cam['gangway'])
